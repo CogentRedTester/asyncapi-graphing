@@ -1,0 +1,7 @@
+info:
+  title: M3
+channels:
+  C:
+    publish: true
+  D:
+    subscribe: true

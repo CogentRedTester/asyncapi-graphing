@@ -1,0 +1,7 @@
+info:
+  title: "M2"
+channels:
+  A:
+    publish: true
+  D:
+    subscribe: true

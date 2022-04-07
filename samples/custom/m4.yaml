@@ -1,0 +1,8 @@
+info:
+  title: M4
+channels:
+  A:
+    publish: true
+    subscribe: true
+  B:
+    publish: true

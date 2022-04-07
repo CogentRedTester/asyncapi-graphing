@@ -1,0 +1,12 @@
+info:
+  title: M1
+channels:
+  A:
+    publish: true
+  B:
+    publish: true
+    subscribe: true
+  C:
+    subscribe: true
+  D:
+    publish: true

@@ -1,0 +1,7 @@
+info:
+  title: M5
+channels:
+  C:
+    publish: true
+  D:
+    publish: true
