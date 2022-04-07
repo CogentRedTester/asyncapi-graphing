@@ -1,8 +1,7 @@
 # diagram.py
-# from diagrams import Diagram
-# from diagrams.aws.compute import EC2
-# from diagrams.aws.database import RDS
-# from diagrams.aws.network import ELB
+from diagrams import Diagram
+from diagrams.aws.compute import EC2
+from diagrams.generic.network import Router
 
 # with Diagram("Web Service", show=False):
 #     ELB("lb") >> EC2("web") >> RDS("userdb")
@@ -68,21 +67,58 @@ for config in configs:
     parse_config(config)
 # print_channels()
 
-# Creates a directed graph for each microservice and channel
-dot = graphviz.Digraph('Topology')
+def name_nodes():
+    for config in configs:
+        config["dot_name"] = "service_"+config["info"]["title"]
 
-for config in configs:
-    config["dot_name"] = "service_"+config["info"]["title"]
-    dot.node(config["dot_name"], config["info"]["title"])
+    for name, channel in channels.items():
+        channel["dot_name"] = "channel_"+name
 
-for name, channel in channels.items():
-    channel["dot_name"] = "channel_"+name
-    dot.node(channel["dot_name"], name, shape="plaintext")
+# Creates a directed graph for each microservice and channel using graphviz
+def do_graphviz():
+    dot = graphviz.Digraph('Topology_graphviz', engine="neato")
+    sub_services = graphviz.Digraph("Microservices")
+    sub_channels = graphviz.Digraph("Channels")
+    sub_services.attr(rank="same")
+    sub_channels.attr(rank="source")
 
-    for api in channel["publishers"]:
-        dot.edge(api["dot_name"], channel["dot_name"])
+    edge_attr = {
+        "color": "gray",
+        "arrowsize": "0.5"
+    }
 
-    for api in channel["subscribers"]:
-        dot.edge(channel["dot_name"], api["dot_name"])
+    for config in configs:
+        sub_services.node(config["dot_name"], config["info"]["title"])
 
-dot.render(view=True)
+    for name, channel in channels.items():
+        sub_channels.node(channel["dot_name"], name, shape="plain", rank="min")
+
+        for api in channel["publishers"]:
+            dot.edge(api["dot_name"], channel["dot_name"], **edge_attr)
+
+        for api in channel["subscribers"]:
+            dot.edge(channel["dot_name"], api["dot_name"], **edge_attr)
+
+    dot.subgraph(sub_services)
+    dot.subgraph(sub_channels)
+    dot.render(view=True)
+
+# creates a directed graph for each microservice and channel using diagrams (uses graphviz internally)
+def do_diagrams():
+    with Diagram("Topology_diagrams", show=False):
+        nodes = {}
+        for config in configs:
+            nodes[config["dot_name"]] = EC2(config["info"]["title"])
+
+        for name, channel in channels.items():
+            nodes[channel["dot_name"]] = Router(name)
+
+            for api in channel["publishers"]:
+                nodes[api["dot_name"]] >> nodes[channel["dot_name"]]
+
+            for api in channel["subscribers"]:
+                nodes[api["dot_name"]] << nodes[channel["dot_name"]]
+
+name_nodes()
+do_graphviz()
+do_diagrams()
