@@ -14,6 +14,7 @@ import yaml
 
 configs = []
 channels = {}
+edges = []
 
 # loads the API specifications from the commandline arguments
 def load_configs():
@@ -67,12 +68,17 @@ for config in configs:
     parse_config(config)
 # print_channels()
 
-def name_nodes():
+def setup_nodes():
     for config in configs:
         config["dot_name"] = "service_"+config["info"]["title"]
 
     for name, channel in channels.items():
         channel["dot_name"] = "channel_"+name
+        for api in channel["publishers"]:
+            edges.append([api["dot_name"], channel["dot_name"]])
+
+        for api in channel["subscribers"]:
+            edges.append([channel["dot_name"], api["dot_name"]])
 
 # Creates a directed graph for each microservice and channel using graphviz
 def do_graphviz():
@@ -93,11 +99,8 @@ def do_graphviz():
     for name, channel in channels.items():
         dot.node(channel["dot_name"], name, shape="plain")
 
-        for api in channel["publishers"]:
-            dot.edge(api["dot_name"], channel["dot_name"], **edge_attr)
-
-        for api in channel["subscribers"]:
-            dot.edge(channel["dot_name"], api["dot_name"], **edge_attr)
+    for edge in edges:
+        dot.edge(*edge, **edge_attr)
 
     # dot.subgraph(sub_services)
     # dot.subgraph(sub_channels)
@@ -113,12 +116,13 @@ def do_diagrams():
         for name, channel in channels.items():
             nodes[channel["dot_name"]] = Router(name)
 
-            for api in channel["publishers"]:
-                nodes[api["dot_name"]] >> nodes[channel["dot_name"]]
+        for edge in edges:
+            nodes[edge[0]] >> nodes[edge[1]]
+
 
             for api in channel["subscribers"]:
                 nodes[api["dot_name"]] << nodes[channel["dot_name"]]
 
-name_nodes()
+setup_nodes()
 do_graphviz()
 do_diagrams()
