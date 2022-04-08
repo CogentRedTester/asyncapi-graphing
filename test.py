@@ -1,16 +1,16 @@
-# diagram.py
+import json
+import yaml
+import sys
+
+import graphviz
+
 from diagrams import Diagram
 from diagrams.aws.compute import EC2
 from diagrams.generic.network import Router
 
-# with Diagram("Web Service", show=False):
-#     ELB("lb") >> EC2("web") >> RDS("userdb")
-
-
-import json
-import sys
-import graphviz
-import yaml
+import plotly.graph_objects as go
+import networkx as nx
+import matplotlib.pyplot as plt
 
 configs = []
 channels = {}
@@ -120,9 +120,27 @@ def do_diagrams():
             nodes[edge[0]] >> nodes[edge[1]]
 
 
-            for api in channel["subscribers"]:
-                nodes[api["dot_name"]] << nodes[channel["dot_name"]]
+def do_networkx():
+    G = nx.DiGraph()
+
+    for config in configs:
+        G.add_node(config["dot_name"])
+    
+    for name, channel in channels.items():
+        G.add_node(channel["dot_name"])
+    
+    for edge in edges:
+        G.add_edge(*edge)
+    
+    G = nx.complete_graph(5)
+    nx.draw(G)
+    
+def do_cytoscape():
+    v = {}
 
 setup_nodes()
 do_graphviz()
 do_diagrams()
+# do_cytoscape()
+# do_networkx()
+# do_plotly()
