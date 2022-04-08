@@ -77,10 +77,10 @@ def name_nodes():
 # Creates a directed graph for each microservice and channel using graphviz
 def do_graphviz():
     dot = graphviz.Digraph('Topology_graphviz', engine="neato")
-    sub_services = graphviz.Digraph("Microservices")
-    sub_channels = graphviz.Digraph("Channels")
-    sub_services.attr(rank="same")
-    sub_channels.attr(rank="source")
+    # sub_services = graphviz.Digraph("Microservices")
+    # sub_channels = graphviz.Digraph("Channels")
+    # sub_services.attr(rank="max")
+    # sub_channels.attr(rank="source")
 
     edge_attr = {
         "color": "gray",
@@ -88,10 +88,10 @@ def do_graphviz():
     }
 
     for config in configs:
-        sub_services.node(config["dot_name"], config["info"]["title"])
+        dot.node(config["dot_name"], config["info"]["title"])
 
     for name, channel in channels.items():
-        sub_channels.node(channel["dot_name"], name, shape="plain", rank="min")
+        dot.node(channel["dot_name"], name, shape="plain")
 
         for api in channel["publishers"]:
             dot.edge(api["dot_name"], channel["dot_name"], **edge_attr)
@@ -99,8 +99,8 @@ def do_graphviz():
         for api in channel["subscribers"]:
             dot.edge(channel["dot_name"], api["dot_name"], **edge_attr)
 
-    dot.subgraph(sub_services)
-    dot.subgraph(sub_channels)
+    # dot.subgraph(sub_services)
+    # dot.subgraph(sub_channels)
     dot.render(view=True)
 
 # creates a directed graph for each microservice and channel using diagrams (uses graphviz internally)
